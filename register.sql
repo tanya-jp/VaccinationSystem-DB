@@ -10,7 +10,8 @@ CREATE PROCEDURE `DB`.register(
 	in accountType varchar(16),
     in job_ID varchar(10),
 	in nurse_level varchar(32),
-    out res varchar(500)
+    out res varchar(500),
+    out job_res varchar (500)
     )
 begin
 	SET @usernameCount = 0;
@@ -45,12 +46,12 @@ begin
 
 			IF @doctorIDCount = 0 and @isDoctorIDValid = 0 then
 				INSERT INTO `DB`.doctor values (ID, job_ID);
-				SET res = "Doctor added";
+				SET job_res = "Doctor added";
 			ELSEIF @doctorIDCount > 0 then
-				SET res = "Doctor already exists";
+				SET job_res = "Doctor already exists";
 			
 			ELSEIF @isDoctorIDValid > 0 then
-				SET res = "Doctor ID must be 5 digits";
+				SET job_res = "Doctor ID must be 5 digits";
 			end if;
 		END IF;
 	
@@ -72,15 +73,15 @@ begin
 		
 			IF @isNurseIDValid = 0 AND @nurseIDCount = 0 and @isnurseLevelValid = 1 then
 				INSERT INTO `DB`.nurse values (ID, job_ID, nurse_level);
-				SET res = "Nurse added";
+				SET job_res = "Nurse added";
 			ELSEIF @nurseIDCount > 0 then
-				SET res = "Nurse already exists";
+				SET job_res = "Nurse already exists";
 		
 			ELSEIF @isnurseLevelValid > 0 then
-				SET res = "Nurse ID must be 8 digits";
+				SET job_res = "Nurse ID must be 8 digits";
  			
 			ELSEIF @isnurseLevelValid = 0 then
-				SET res = "Nurse level is not valid";
+				SET job_res = "Nurse level is not valid";
 			end if;
 		end if;
 	

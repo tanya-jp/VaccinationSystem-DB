@@ -16,7 +16,7 @@ begin
 			if (EXISTS (SELECT * FROM `DB`.system_info WHERE `DB`.system_info.ID = person_ID)) then 
 				if (EXISTS (SELECT * FROM `DB`.health_center WHERE `DB`.health_center.name = vaccination_center_name)) then 
 					if (EXISTS (SELECT * FROM `DB`.vial WHERE `DB`.vial.serial_number = vial_serial)) then 
-						INSERT INTO `DB`.history values (person_ID, @nurseID, vaccination_center_name ,vial_serial, CURRENT_DATE(), null);
+						INSERT INTO `DB`.history values (person_ID, @nurseID, vaccination_center_name ,vial_serial, CURRENT_DATE(), 0);
 						set res = "Done!";
 					else
 						set res =	"Invalid serial number.";
