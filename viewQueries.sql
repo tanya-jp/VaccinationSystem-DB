@@ -1,10 +1,22 @@
--- DROP PROCEDURE IF EXISTS db.showScores;
-CREATE PROCEDURE db.showScores()
+DROP PROCEDURE IF EXISTS db.showScores;
+CREATE PROCEDURE db.showScores(in startNum int, out endNum int)
 begin 
-	SELECT h.vaccination_center_name, cast(avg(h.score) as decimal(10,1)) as average_score
-	FROM `DB`.history as h
-	GROUP by h.vaccination_center_name
-    ORDER by average_score desc;
+	set endNum = startNum + 5;
+	WITH NumberedScoreTable AS
+	(
+    	select scoreTable.*,
+        ROW_NUMBER() OVER (ORDER BY scoreTable.average_score desc) AS RowNumber
+    	FROM
+        	(SELECT h.vaccination_center_name, cast(avg(h.score) as decimal(10,1)) as average_score
+			FROM `DB`.history as h
+			GROUP by h.vaccination_center_name
+    		ORDER by average_score desc)as scoreTable
+	)
+	select *
+	FROM
+    	NumberedScoreTable
+	WHERE
+    	RowNumber BETWEEN startNum AND endNum-1;
 end;
 
 -- DROP PROCEDURE IF EXISTS db.vaccinationNum;
@@ -32,3 +44,64 @@ begin
 	where total.num = b.dose
 	GROUP by b.name;
 end;
+
+-- DROP PROCEDURE IF EXISTS db.showTop3OfEachBrand;
+CREATE PROCEDURE db.showTop3OfEachBrand()
+begin 
+	SELECT *
+    FROM (
+        SELECT *, Rank() 
+          over (Partition BY selected.brand_name
+                ORDER BY selected.scores DESC ) AS Rank
+        FROM (
+        select v.name as brand_name, h.vaccination_center_name, sum(h.score) as scores
+		from `DB`.vial as v
+		join `DB`.history as h 
+		on h.vial_serial = v.serial_number
+		GROUP by v.name, h.vaccination_center_name
+		order by brand_name, scores desc)as selected
+        ) rs WHERE Rank <= 3;
+end;
+
+DROP PROCEDURE IF EXISTS db.showSecondDoseCenter;
+CREATE PROCEDURE db.showSecondDoseCenter(in login_time varchar(64))
+begin 
+	SELECT ID INTO @personID FROM `DB`.login WHERE MD5(`DB`.login.login_time) = login_time;
+	SELECT vial_serial INTO @vialSerial FROM `DB`.history WHERE`DB`.history.person_ID = @personID;
+	SELECT name INTO @brandName FROM `DB`.vial WHERE`DB`.vial.serial_number = @vialSerial;
+	select v.name as brand_name, h.vaccination_center_name, sum(h.score) as scores
+		from `DB`.vial as v
+		join `DB`.history as h 
+		on h.vial_serial = v.serial_number
+		where v.name = @brandName
+		GROUP by v.name, h.vaccination_center_name
+		order by brand_name, scores desc;
+end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
